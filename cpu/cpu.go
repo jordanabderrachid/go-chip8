@@ -510,7 +510,8 @@ func (cpu *CPU) instr_Fx1E(x byte) {
 //
 // The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
 func (cpu *CPU) instr_Fx29(x byte) {
-	panic("To implement opcode Fx29")
+	cpu.R.I = display.SpritesAddresses[cpu.R.V[x]]
+	cpu.R.PC += 2
 }
 
 // 0xFx33 - LD B, Vx
