@@ -69,7 +69,7 @@ func (kb *Keyboard) ListenKeyboardInput() {
 	for {
 		key := int(termbox.PollEvent().Ch)
 		if v, ok := KeyMap[key]; ok {
-			kb.ActivateKey(key)
+			kb.ActivateKey(v)
 		} else {
 			kb.KeyStateToFalse()
 		}
