@@ -3,6 +3,7 @@ package cpu
 import (
 	"fmt"
 	"github.com/jordanabderrachid/go-chip8/display"
+	"github.com/jordanabderrachid/go-chip8/keyboard"
 	"github.com/jordanabderrachid/go-chip8/mmu"
 	"github.com/jordanabderrachid/go-chip8/timer"
 	"math/rand"
@@ -43,14 +44,18 @@ type CPU struct {
 	Memory                 *mmu.Memory
 	SoundTimer, DelayTimer timer.Timer
 	Display                *display.Display
+	Keyboard               *keyboard.Keyboard
 }
 
 func (cpu *CPU) Reset() {
 	cpu.Memory = new(mmu.Memory)
+	cpu.Keyboard = new(keyboard.Keyboard)
+	cpu.Display = new(display.Display)
 
 	cpu.R.Reset()
 	cpu.Memory.Reset()
 	cpu.Display.Reset()
+	cpu.Keyboard.Reset()
 
 	go cpu.SoundTimer.Run(&cpu.R.ST)
 	go cpu.DelayTimer.Run(&cpu.R.DT)
@@ -448,17 +453,29 @@ func (cpu *CPU) instr_Dxyn(x, y, n byte) {
 // 0xEx9E - SKP Vx
 // Skip next instruction if key with the value of Vx is pressed.
 //
-// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 2.
+// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 4,
+// otherwise by 2.
 func (cpu *CPU) instr_Ex9E(x byte) {
-	panic("To implement opcode Ex9E")
+	b := cpu.R.V[x]
+	if cpu.Keyboard.KeyState[b] {
+		cpu.R.PC += 4
+	} else {
+		cpu.R.PC += 2
+	}
 }
 
 // 0xExA1 - SKNP Vx
 // Skip next instruction if key with the value of Vx is pressed.
 //
-// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 2.
+// Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 4,
+// otherwise by 2.
 func (cpu *CPU) instr_ExA1(x byte) {
-	panic("To implement opcode ExA1")
+	b := cpu.R.V[x]
+	if cpu.Keyboard.KeyState[b] {
+		cpu.R.PC += 2
+	} else {
+		cpu.R.PC += 4
+	}
 }
 
 // 0xFx07 - LD Vx, DT
@@ -475,7 +492,9 @@ func (cpu *CPU) instr_Fx07(x byte) {
 //
 // All execution stops until a key is pressed, then the value of that key is stored in Vx.
 func (cpu *CPU) instr_Fx0A(x byte) {
-	panic("To implement opcode Fx0A")
+	b := keyboard.WaitForNextKey()
+	cpu.R.V[x] = b
+	cpu.R.PC += 2
 }
 
 // OxFx15 - LD DT, Vx
