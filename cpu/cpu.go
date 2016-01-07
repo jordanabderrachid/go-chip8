@@ -520,7 +520,24 @@ func (cpu *CPU) instr_Fx29(x byte) {
 // The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location I, the tens digit at location I+1,
 // and the ones digit at location I+2.
 func (cpu *CPU) instr_Fx33(x byte) {
-	panic("To implement opcode Fx33")
+	value := cpu.R.V[x]
+	ones := value % 10
+	value /= 10
+	tens := value % 10
+	value /= 10
+	hundreds := value % 10
+
+	if err := cpu.Memory.SetByte(cpu.R.I, hundreds); err != nil {
+		panic(err)
+	}
+
+	if err := cpu.Memory.SetByte(cpu.R.I+1, tens); err != nil {
+		panic(err)
+	}
+
+	if err := cpu.Memory.SetByte(cpu.R.I+2, ones); err != nil {
+		panic(err)
+	}
 }
 
 // 0xFx55 - LD [I], Vx
