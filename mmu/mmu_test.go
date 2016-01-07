@@ -21,6 +21,15 @@ func TestReset(t *testing.T) {
 	}
 }
 
+func TestLoadSprites(t *testing.T) {
+	mem := new(Memory)
+	mem.Reset()
+
+	if err := mem.LoadSprites(); err != nil {
+		t.Errorf("Failed loading sprites %s", err)
+	}
+}
+
 func TestAllocate(t *testing.T) {
 	mem := new(Memory)
 	mem.Reset()
