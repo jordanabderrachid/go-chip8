@@ -18,3 +18,8 @@ var Sprites map[string][5]byte = map[string][5]byte{
 	"E": {0xF0, 0x80, 0xF0, 0x80, 0xF0},
 	"F": {0xF0, 0x80, 0xF0, 0x80, 0x80},
 }
+
+type Display struct{}
+
+func (d *Display) Reset() {}
+func (d *Display) Clear() {}
