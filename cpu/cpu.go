@@ -63,6 +63,12 @@ func (cpu *CPU) Reset() {
 	go cpu.DelayTimer.Run(&cpu.R.DT)
 }
 
+func (cpu *CPU) LoadData(b []byte) {
+	if err := cpu.Memory.AllocateWithBuffer(b, 0x200); err != nil {
+		panic(err)
+	}
+}
+
 func (cpu *CPU) GetOpcode(addr rune) (opcode rune) {
 	var high byte
 	var low byte
