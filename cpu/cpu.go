@@ -579,6 +579,8 @@ func (cpu *CPU) instr_Fx33(x byte) {
 	if err := cpu.Memory.SetByte(cpu.R.I+2, ones); err != nil {
 		panic(err)
 	}
+
+	cpu.R.PC += 2
 }
 
 // 0xFx55 - LD [I], Vx
