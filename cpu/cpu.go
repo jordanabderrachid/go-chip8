@@ -117,16 +117,16 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		addr := opcode & 0x0FFF
 		cpu.instr_2nnn(addr)
 	case 0x3000: // 0x3xxx
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		value := byte(opcode & 0x00FF)
 		cpu.instr_3xkk(x, value)
 	case 0x4000: // 0x4xxx
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		value := byte(opcode & 0x00FF)
 		cpu.instr_4xkk(x, value)
 	case 0x5000: // 0x5xxx
-		x := byte(opcode & 0x0F00)
-		y := byte(opcode & 0x00F0)
+		x := byte((opcode & 0x0F00) >> 8)
+		y := byte((opcode & 0x00F0) >> 4)
 		switch opcode & 0x000F {
 		case 0x0000: // 0x5xx0
 			cpu.instr_5xy0(x, y)
@@ -134,16 +134,16 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0x6000: // 0x6xxx
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		value := byte(opcode & 0x00FF)
 		cpu.instr_6xkk(x, value)
 	case 0x7000: // 0x7xxx
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		value := byte(opcode & 0x00FF)
 		cpu.instr_7xkk(x, value)
 	case 0x8000: // 0x8xxx
-		x := byte(opcode & 0x0F00)
-		y := byte(opcode & 0x00F0)
+		x := byte((opcode & 0x0F00) >> 8)
+		y := byte((opcode & 0x00F0) >> 4)
 		switch opcode & 0x000F {
 		case 0x0000: // 0x8xx0
 			cpu.instr_8xy0(x, y)
@@ -167,8 +167,8 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0x9000: // 0x9xxx
-		x := byte(opcode & 0x0F00)
-		y := byte(opcode & 0x00F0)
+		x := byte((opcode & 0x0F00) >> 8)
+		y := byte((opcode & 0x00F0) >> 4)
 		switch opcode & 0x000F {
 		case 0x0000: // 0x9xx0
 			cpu.instr_9xy0(x, y)
@@ -182,16 +182,16 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		addr := opcode & 0x0FFF
 		cpu.instr_Bnnn(addr)
 	case 0xC000: // 0xCxxx
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		value := byte(opcode & 0x00FF)
 		cpu.instr_Cxkk(x, value)
 	case 0xD000: // 0xDxxx
-		x := byte(opcode & 0x0F00)
-		y := byte(opcode & 0x00F0)
+		x := byte((opcode & 0x0F00) >> 8)
+		y := byte((opcode & 0x00F0) >> 4)
 		n := byte(opcode & 0x000F)
 		cpu.instr_Dxyn(x, y, n)
 	case 0xE000: // 0xExxx
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		switch opcode & 0x00FF {
 		case 0x009E: // 0xEx9E
 			cpu.instr_Ex9E(x)
@@ -201,7 +201,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0xF000: // 0xF000
-		x := byte(opcode & 0x0F00)
+		x := byte((opcode & 0x0F00) >> 8)
 		switch opcode & 0x00FF {
 		case 0x0007: // 0xFx07
 			cpu.instr_Fx07(x)
