@@ -7,6 +7,7 @@ import (
 	"github.com/jordanabderrachid/go-chip8/mmu"
 	"github.com/jordanabderrachid/go-chip8/timer"
 	"math/rand"
+	"time"
 )
 
 type Registers struct {
@@ -78,6 +79,17 @@ func (cpu *CPU) GetOpcode(addr rune) (opcode rune) {
 	}
 
 	return rune(high<<8 + low)
+}
+
+func (cpu *CPU) Run() {
+	ticker := time.NewTicker(time.Duration(int64(time.Second) / timer.Frenquency))
+
+	for {
+		select {
+		case <-ticker.C:
+			cpu.ExecuteOpcode(cpu.GetOpcode(cpu.R.PC))
+		}
+	}
 }
 
 func (cpu *CPU) ExecuteOpcode(opcode rune) {
