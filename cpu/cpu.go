@@ -258,7 +258,7 @@ func (cpu *CPU) instr_1nnn(addr rune) {
 // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
 func (cpu *CPU) instr_2nnn(addr rune) {
 	cpu.R.SP++
-	cpu.R.Stack[cpu.R.SP] = cpu.R.PC
+	cpu.R.Stack[cpu.R.SP] = cpu.R.PC + 2
 	cpu.R.PC = addr
 }
 
