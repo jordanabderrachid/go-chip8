@@ -22,7 +22,7 @@ type Registers struct {
 	ST byte // sound timer
 }
 
-func (r Registers) Reset() {
+func (r *Registers) Reset() {
 	for i := range r.V {
 		r.V[i] = 0x00
 	}
@@ -40,7 +40,7 @@ func (r Registers) Reset() {
 }
 
 type CPU struct {
-	R                      Registers
+	R                      *Registers
 	Memory                 *mmu.Memory
 	SoundTimer, DelayTimer timer.Timer
 	Display                *display.Display
@@ -51,6 +51,7 @@ func (cpu *CPU) Reset() {
 	cpu.Memory = new(mmu.Memory)
 	cpu.Keyboard = new(keyboard.Keyboard)
 	cpu.Display = new(display.Display)
+	cpu.R = new(Registers)
 
 	cpu.R.Reset()
 	cpu.Memory.Reset()
