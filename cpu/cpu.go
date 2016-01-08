@@ -74,17 +74,18 @@ func (cpu *CPU) GetOpcode(addr rune) (opcode rune) {
 	var low byte
 	var err error
 	// instructions are stored as big-endian
-	low, err = cpu.Memory.GetByte(addr)
+	high, err = cpu.Memory.GetByte(addr)
 	if err != nil {
 		panic(err)
 	}
 
-	high, err = cpu.Memory.GetByte(addr + 1)
+	low, err = cpu.Memory.GetByte(addr + 1)
 	if err != nil {
 		panic(err)
 	}
 
-	return rune(high<<8 + low)
+	fmt.Printf("opcode at %04x is %04x\n", addr, rune(high)<<8+rune(low))
+	return rune(high)<<8 + rune(low)
 }
 
 func (cpu *CPU) Run() {
