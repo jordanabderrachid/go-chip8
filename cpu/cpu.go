@@ -59,6 +59,10 @@ func (cpu *CPU) Reset() {
 	cpu.Display.Reset()
 	cpu.Keyboard.Reset()
 
+	if err := cpu.Memory.LoadSprites(); err != nil {
+		panic(err)
+	}
+
 	go cpu.SoundTimer.Run(&cpu.R.ST)
 	go cpu.DelayTimer.Run(&cpu.R.DT)
 }
