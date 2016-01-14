@@ -470,9 +470,28 @@ func (cpu *CPU) instr_Cxkk(x, value byte) {
 // it is set to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the
 // opposite side of the screen.
 func (cpu *CPU) instr_Dxyn(x, y, n byte) {
-	fmt.Printf("Read %d bytes starting at address %04x from memory and display at coord (%d, %d)\n", n, cpu.R.I, cpu.R.V[x], cpu.R.V[y])
+	cells := make([]byte, n)
+	for i := 0; i < int(n); i++ {
+		b, err := cpu.Memory.GetByte(cpu.R.I + rune(i))
+		if err != nil {
+			panic(err)
+		}
+		cells[i] = b
+	}
+
+	sprite := display.Sprite{cells}
+	coll, err := cpu.Display.DrawSprite(int(cpu.R.V[x]), int(cpu.R.V[y]), sprite)
+	if err != nil {
+		panic(err)
+	}
+
+	if coll {
+		cpu.R.V[0xF] = 1
+	} else {
+		cpu.R.V[0xF] = 0
+	}
+
 	cpu.R.PC += 2
-	// panic("To implement opcode Dxyn")
 }
 
 // 0xEx9E - SKP Vx
