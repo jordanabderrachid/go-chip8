@@ -88,7 +88,6 @@ func (cpu *CPU) GetOpcode(addr rune) (opcode rune) {
 		panic(err)
 	}
 
-	fmt.Printf("opcode at %04x is %04x\n", addr, rune(high)<<8+rune(low))
 	return rune(high)<<8 + rune(low)
 }
 
