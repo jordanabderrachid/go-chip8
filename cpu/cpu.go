@@ -6,6 +6,7 @@ import (
 	"github.com/jordanabderrachid/go-chip8/keyboard"
 	"github.com/jordanabderrachid/go-chip8/mmu"
 	"github.com/jordanabderrachid/go-chip8/timer"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -60,7 +61,7 @@ func (cpu *CPU) Reset() {
 	cpu.Keyboard.Reset()
 
 	if err := cpu.Memory.LoadSprites(); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	go cpu.SoundTimer.Run(&cpu.R.ST)
@@ -69,7 +70,7 @@ func (cpu *CPU) Reset() {
 
 func (cpu *CPU) LoadData(b []byte) {
 	if err := cpu.Memory.AllocateWithBuffer(b, 0x200); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }
 
@@ -80,14 +81,15 @@ func (cpu *CPU) GetOpcode(addr rune) (opcode rune) {
 	// instructions are stored as big-endian
 	high, err = cpu.Memory.GetByte(addr)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	low, err = cpu.Memory.GetByte(addr + 1)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
+	log.Printf("running opcode %04x\n", rune(high)<<8+rune(low))
 	return rune(high)<<8 + rune(low)
 }
 
@@ -111,7 +113,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		case 0x00EE: // 0x00EE
 			cpu.instr_00EE()
 		default:
-			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
+			log.Panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0x1000: // 0x1xxx
 		addr := opcode & 0x0FFF
@@ -134,7 +136,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		case 0x0000: // 0x5xx0
 			cpu.instr_5xy0(x, y)
 		default:
-			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
+			log.Panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0x6000: // 0x6xxx
 		x := byte((opcode & 0x0F00) >> 8)
@@ -167,7 +169,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		case 0x000E: // 0x8xxE
 			cpu.instr_8xyE(x)
 		default:
-			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
+			log.Panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0x9000: // 0x9xxx
 		x := byte((opcode & 0x0F00) >> 8)
@@ -176,7 +178,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		case 0x0000: // 0x9xx0
 			cpu.instr_9xy0(x, y)
 		default:
-			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
+			log.Panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0xA000: // 0xAxxx
 		addr := opcode & 0x0FFF
@@ -201,7 +203,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		case 0x00A1: // 0xExA1
 			cpu.instr_ExA1(x)
 		default:
-			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
+			log.Panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	case 0xF000: // 0xF000
 		x := byte((opcode & 0x0F00) >> 8)
@@ -225,7 +227,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 		case 0x0065: // 0xFx65
 			cpu.instr_Fx65(x)
 		default:
-			panic(fmt.Sprintf("Unknown opcode %04x", opcode))
+			log.Panic(fmt.Sprintf("Unknown opcode %04x", opcode))
 		}
 	}
 }
@@ -234,6 +236,7 @@ func (cpu *CPU) ExecuteOpcode(opcode rune) {
 // Clear the display.
 // Increment the PC.
 func (cpu *CPU) instr_00E0() {
+	log.Println("clear display")
 	cpu.Display.Clear()
 	cpu.R.PC += 2
 }
@@ -252,6 +255,7 @@ func (cpu *CPU) instr_00EE() {
 //
 // The interpreter sets the program counter to nnn.
 func (cpu *CPU) instr_1nnn(addr rune) {
+	log.Printf("jump to location %04x\n", addr)
 	cpu.R.PC = addr
 }
 
@@ -260,6 +264,7 @@ func (cpu *CPU) instr_1nnn(addr rune) {
 //
 // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
 func (cpu *CPU) instr_2nnn(addr rune) {
+	log.Printf("call subroutine at %04x\n", addr)
 	cpu.R.SP++
 	cpu.R.Stack[cpu.R.SP] = cpu.R.PC + 2
 	cpu.R.PC = addr
@@ -270,9 +275,12 @@ func (cpu *CPU) instr_2nnn(addr rune) {
 //
 // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 4, else increments by 2.
 func (cpu *CPU) instr_3xkk(x, value byte) {
+	log.Printf("skip instruction if V[%x] == %02x\n", x, value)
 	if cpu.R.V[x] == value {
+		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
+		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	}
 }
@@ -282,9 +290,12 @@ func (cpu *CPU) instr_3xkk(x, value byte) {
 //
 // The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 4, else increments by 2.
 func (cpu *CPU) instr_4xkk(x, value byte) {
+	log.Printf("skip instruction if V[%x] != %02x\n", x, value)
 	if cpu.R.V[x] != value {
+		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
+		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	}
 }
@@ -294,9 +305,12 @@ func (cpu *CPU) instr_4xkk(x, value byte) {
 //
 // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 4, else increments by 2.
 func (cpu *CPU) instr_5xy0(x, y byte) {
+	log.Printf("skip next instruction if V[%x] == V[%x]\n", x, y)
 	if cpu.R.V[x] == cpu.R.V[y] {
+		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
+		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	}
 }
@@ -306,6 +320,7 @@ func (cpu *CPU) instr_5xy0(x, y byte) {
 //
 // The interpreter puts the value kk into register Vx.
 func (cpu *CPU) instr_6xkk(x, value byte) {
+	log.Printf("set V[%x] = %02x\n", x, value)
 	cpu.R.V[x] = value
 	cpu.R.PC += 2
 }
@@ -315,6 +330,7 @@ func (cpu *CPU) instr_6xkk(x, value byte) {
 //
 // Adds the value kk to the value of register Vx, then stores the result in Vx.
 func (cpu *CPU) instr_7xkk(x, value byte) {
+	log.Printf("add %02x to V[%x]\n", value, x)
 	cpu.R.V[x] += value
 	cpu.R.PC += 2
 }
@@ -324,6 +340,7 @@ func (cpu *CPU) instr_7xkk(x, value byte) {
 //
 // Stores the value of the register Vy in register Vx.
 func (cpu *CPU) instr_8xy0(x, y byte) {
+	log.Printf("set V[%x] = V[%x]\n", x, y)
 	cpu.R.V[x] = cpu.R.V[y]
 	cpu.R.PC += 2
 }
@@ -333,6 +350,7 @@ func (cpu *CPU) instr_8xy0(x, y byte) {
 //
 // Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx.
 func (cpu *CPU) instr_8xy1(x, y byte) {
+	log.Printf("set V[%x] = V[%x] OR V[%x]\n", x, x, y)
 	cpu.R.V[x] = cpu.R.V[x] | cpu.R.V[y]
 	cpu.R.PC += 2
 }
@@ -342,6 +360,7 @@ func (cpu *CPU) instr_8xy1(x, y byte) {
 //
 // Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx.
 func (cpu *CPU) instr_8xy2(x, y byte) {
+	log.Printf("set V[%x] = V[%x] AND V[%x]\n", x, x, y)
 	cpu.R.V[x] = cpu.R.V[x] & cpu.R.V[y]
 	cpu.R.PC += 2
 }
@@ -351,6 +370,7 @@ func (cpu *CPU) instr_8xy2(x, y byte) {
 //
 // Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx.
 func (cpu *CPU) instr_8xy3(x, y byte) {
+	log.Printf("set V[%x] = V[%x] XOR V[%x]\n", x, x, y)
 	cpu.R.V[x] = cpu.R.V[x] ^ cpu.R.V[y]
 	cpu.R.PC += 2
 }
@@ -361,11 +381,14 @@ func (cpu *CPU) instr_8xy3(x, y byte) {
 // The values of Vx and Vy are added together. If the result is greater than 8bits (>255), VF is set to 1, otherwise 0.
 // Only the lowest 8 bits of the result are kept, and stored in Vx.
 func (cpu *CPU) instr_8xy4(x, y byte) {
+	log.Printf("set V[%x] = V[%x] + V[%x]\n", x, x, y)
 	result := rune(cpu.R.V[x] + cpu.R.V[y])
 
 	if result > 0xFF {
+		log.Println("set V[F] = 1")
 		cpu.R.V[0xF] = 1
 	} else {
+		log.Println("set V[F] = 0")
 		cpu.R.V[0xF] = 0
 	}
 
@@ -378,9 +401,12 @@ func (cpu *CPU) instr_8xy4(x, y byte) {
 //
 // If Vx > Vy, then VF is set to 1, otherwise 0. The Vy is subtracted from Vx, and the result is stored in Vx.
 func (cpu *CPU) instr_8xy5(x, y byte) {
+	log.Printf("set V[%x] = V[%x] + V[%x]\n", x, x, y)
 	if cpu.R.V[x] > cpu.R.V[y] {
 		cpu.R.V[0xF] = 1
+		log.Println("set V[F] = 1")
 	} else {
+		log.Println("set V[F] = 0")
 		cpu.R.V[0xF] = 0
 	}
 
@@ -393,19 +419,23 @@ func (cpu *CPU) instr_8xy5(x, y byte) {
 //
 // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
 func (cpu *CPU) instr_8xy6(x byte) {
+	log.Printf("set V[%x] = V[%x] SHR 1\n", x, x)
 	cpu.R.V[0xF] = cpu.R.V[x] & 0x1
 	cpu.R.V[x] /= 2
 	cpu.R.PC += 2
 }
 
 // 0x8xy7 - SUBN Vx, Vy
-// Set Vx = Vy - Vy, set VF = NOT borrow.
+// Set Vx = Vy - Vx, set VF = NOT borrow.
 //
 // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the result is stored in Vx.
 func (cpu *CPU) instr_8xy7(x, y byte) {
+	log.Printf("set V[%x] = V[%x] - V[%x]\n", x, y, x)
 	if cpu.R.V[y] > cpu.R.V[x] {
+		log.Println("set V[F] = 1")
 		cpu.R.V[0xF] = 1
 	} else {
+		log.Println("set V[F] = 0")
 		cpu.R.V[0xF] = 0
 	}
 
@@ -418,6 +448,7 @@ func (cpu *CPU) instr_8xy7(x, y byte) {
 //
 // If the most-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is multiplied by 2.
 func (cpu *CPU) instr_8xyE(x byte) {
+	log.Printf("set V[%x] = V[%x] SHL 1\n", x, x)
 	cpu.R.V[0xF] = cpu.R.V[x] & 0x80
 	cpu.R.V[x] *= 2
 	cpu.R.PC += 2
@@ -428,9 +459,12 @@ func (cpu *CPU) instr_8xyE(x byte) {
 //
 // The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 4, otherwise by 2.
 func (cpu *CPU) instr_9xy0(x, y byte) {
+	log.Printf("skip next instruction if V[%x] != V[%x]\n", x, y)
 	if cpu.R.V[x] != cpu.R.V[y] {
+		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
+		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	}
 }
@@ -440,6 +474,7 @@ func (cpu *CPU) instr_9xy0(x, y byte) {
 //
 // The value of register I is set to nnn.
 func (cpu *CPU) instr_Annn(addr rune) {
+	log.Printf("set I = %04x\n", addr)
 	cpu.R.I = addr
 	cpu.R.PC += 2
 }
@@ -449,6 +484,7 @@ func (cpu *CPU) instr_Annn(addr rune) {
 //
 // The program counter is set to nnn plus the value of V0.
 func (cpu *CPU) instr_Bnnn(addr rune) {
+	log.Printf("jump to V[0] + %04x = %04x", addr, rune(cpu.R.V[0x0])+addr)
 	cpu.R.PC = rune(cpu.R.V[0x0]) + addr
 }
 
@@ -457,6 +493,7 @@ func (cpu *CPU) instr_Bnnn(addr rune) {
 //
 // The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx.
 func (cpu *CPU) instr_Cxkk(x, value byte) {
+	log.Printf("set V[%x] = random byte AND %02x\n", x, value)
 	random := byte(rand.Intn(0xFF + 1)) // Intn exclude the last value.
 	cpu.R.V[x] = random & value
 	cpu.R.PC += 2
@@ -470,11 +507,12 @@ func (cpu *CPU) instr_Cxkk(x, value byte) {
 // it is set to 0. If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the
 // opposite side of the screen.
 func (cpu *CPU) instr_Dxyn(x, y, n byte) {
+	log.Printf("display %x-byte sprite starting at memory location %04x at (%02x, %02x)", n, cpu.R.I, cpu.R.V[x], cpu.R.V[y])
 	cells := make([]byte, n)
 	for i := 0; i < int(n); i++ {
 		b, err := cpu.Memory.GetByte(cpu.R.I + rune(i))
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 		cells[i] = b
 	}
@@ -482,12 +520,14 @@ func (cpu *CPU) instr_Dxyn(x, y, n byte) {
 	sprite := display.Sprite{cells}
 	coll, err := cpu.Display.DrawSprite(int(cpu.R.V[x]), int(cpu.R.V[y]), sprite)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	if coll {
+		log.Println("collision")
 		cpu.R.V[0xF] = 1
 	} else {
+		log.Println("no collision")
 		cpu.R.V[0xF] = 0
 	}
 
@@ -500,6 +540,7 @@ func (cpu *CPU) instr_Dxyn(x, y, n byte) {
 // Checks the keyboard, and if the key corresponding to the value of Vx is currently in the down position, PC is increased by 4,
 // otherwise by 2.
 func (cpu *CPU) instr_Ex9E(x byte) {
+	log.Printf("skip net instruction if key %x is pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
 	if cpu.Keyboard.KeyState[b] {
 		cpu.R.PC += 4
@@ -514,6 +555,7 @@ func (cpu *CPU) instr_Ex9E(x byte) {
 // Checks the keyboard, and if the key corresponding to the value of Vx is currently in the up position, PC is increased by 4,
 // otherwise by 2.
 func (cpu *CPU) instr_ExA1(x byte) {
+	log.Printf("skip net instruction if key %x is not pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
 	if cpu.Keyboard.KeyState[b] {
 		cpu.R.PC += 2
@@ -527,6 +569,7 @@ func (cpu *CPU) instr_ExA1(x byte) {
 //
 // The value of DT is placed into Vx.
 func (cpu *CPU) instr_Fx07(x byte) {
+	log.Printf("set V[%x] = delay timer value (%02x)\n", x, cpu.R.DT)
 	cpu.R.V[x] = cpu.R.DT
 	cpu.R.PC += 2
 }
@@ -536,6 +579,7 @@ func (cpu *CPU) instr_Fx07(x byte) {
 //
 // All execution stops until a key is pressed, then the value of that key is stored in Vx.
 func (cpu *CPU) instr_Fx0A(x byte) {
+	log.Println("freeze until key press")
 	b := keyboard.WaitForNextKey()
 	cpu.R.V[x] = b
 	cpu.R.PC += 2
@@ -546,6 +590,7 @@ func (cpu *CPU) instr_Fx0A(x byte) {
 //
 // DT is set equal to the value of Vx.
 func (cpu *CPU) instr_Fx15(x byte) {
+	log.Printf("set DT = V[%x] (%02x)\n", x, cpu.R.V[x])
 	cpu.R.DT = cpu.R.V[x]
 	cpu.R.PC += 2
 }
@@ -555,6 +600,7 @@ func (cpu *CPU) instr_Fx15(x byte) {
 //
 // ST is set equal to the value of Vx.
 func (cpu *CPU) instr_Fx18(x byte) {
+	log.Printf("set ST = V[%x] (%02x)\n", x, cpu.R.V[x])
 	cpu.R.ST = cpu.R.V[x]
 	cpu.R.PC += 2
 }
@@ -564,6 +610,7 @@ func (cpu *CPU) instr_Fx18(x byte) {
 //
 // The values of I and Vx are added, and the results are stored in I.
 func (cpu *CPU) instr_Fx1E(x byte) {
+	log.Printf("set I = I + V[%x]\n", x)
 	cpu.R.I = cpu.R.I + rune(cpu.R.V[x])
 	cpu.R.PC += 2
 }
@@ -573,7 +620,13 @@ func (cpu *CPU) instr_Fx1E(x byte) {
 //
 // The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
 func (cpu *CPU) instr_Fx29(x byte) {
-	cpu.R.I = display.SpritesAddresses[cpu.R.V[x]]
+	log.Printf("set I = location of the sprite for digit V[%x] (%02x)\n", x, cpu.R.V[x])
+	addr, ok := display.SpritesAddresses[cpu.R.V[x]]
+	if !ok {
+		log.Panic("unkown sprite")
+	}
+
+	cpu.R.I = addr
 	cpu.R.PC += 2
 }
 
@@ -583,6 +636,7 @@ func (cpu *CPU) instr_Fx29(x byte) {
 // The interpreter takes the decimal value of Vx, and places the hundreds digit in memory at location I, the tens digit at location I+1,
 // and the ones digit at location I+2.
 func (cpu *CPU) instr_Fx33(x byte) {
+	log.Printf("stores BCD representation of V[%x] (0x%02x : %d) in memory location %04x %04x %04x\n", x, cpu.R.V[x], cpu.R.V[x], cpu.R.I, cpu.R.I+1, cpu.R.I+2)
 	value := cpu.R.V[x]
 	ones := value % 10
 	value /= 10
@@ -590,16 +644,19 @@ func (cpu *CPU) instr_Fx33(x byte) {
 	value /= 10
 	hundreds := value % 10
 
+	log.Printf("set at memory location %04x 0x%02x (%d)\n", cpu.R.I, hundreds)
 	if err := cpu.Memory.SetByte(cpu.R.I, hundreds); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
+	log.Printf("set at memory location %04x 0x%02x (%d)\n", cpu.R.I+1, tens)
 	if err := cpu.Memory.SetByte(cpu.R.I+1, tens); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
+	log.Printf("set at memory location %04x 0x%02x (%d)\n", cpu.R.I+2, ones)
 	if err := cpu.Memory.SetByte(cpu.R.I+2, ones); err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	cpu.R.PC += 2
@@ -610,9 +667,11 @@ func (cpu *CPU) instr_Fx33(x byte) {
 //
 // The interpreter copies the values of registers V0 through Vx into memory, starting at the address in I.
 func (cpu *CPU) instr_Fx55(x byte) {
+	log.Printf("store registers V[0] through V[%x] in memory starting at location %04x\n", x, cpu.R.I)
 	for i := 0; i <= int(x); i++ {
+		log.Printf("set at memory location %04x 0x%02x (%d)\n", cpu.R.I+rune(i), cpu.R.V[i])
 		if err := cpu.Memory.SetByte(cpu.R.I+rune(i), cpu.R.V[i]); err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 	}
 
@@ -624,13 +683,16 @@ func (cpu *CPU) instr_Fx55(x byte) {
 //
 // The interpreter reads values from memory starting at location I into registers V0 through Vx.
 func (cpu *CPU) instr_Fx65(x byte) {
+	log.Printf("read registers V[0] through V[%x] from memory starting at location %04x\n", x, cpu.R.I)
 	for i := 0; i <= int(x); i++ {
 		b, err := cpu.Memory.GetByte(cpu.R.I + rune(i))
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
+		log.Printf("set V[%x] = 0x%02x (%d)\n", i, b, b)
 		cpu.R.V[i] = b
 	}
 
 	cpu.R.PC += 2
 }
+	log.Printf("return from subroutine, PC is now %04x\n", cpu.R.PC)

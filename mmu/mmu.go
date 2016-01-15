@@ -3,6 +3,7 @@ package mmu
 import (
 	"fmt"
 	"github.com/jordanabderrachid/go-chip8/display"
+	"log"
 )
 
 const memorySize rune = 0x1000 // 4096
@@ -12,12 +13,14 @@ type Memory struct {
 }
 
 func (mem *Memory) Reset() {
+	log.Println("reseting memory")
 	for i := range mem.m {
 		mem.SetByte(rune(i), 0x00)
 	}
 }
 
 func (mem *Memory) LoadSprites() error {
+	log.Println("loading sprites")
 	var addr rune = 0x0000
 	for i := 0; i <= 0x0F; i++ {
 		s := display.Sprites[byte(i)]
