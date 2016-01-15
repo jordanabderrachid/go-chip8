@@ -19,8 +19,9 @@ func (mem *Memory) Reset() {
 
 func (mem *Memory) LoadSprites() error {
 	var addr rune = 0x0000
-	for _, v := range display.Sprites {
-		for _, b := range v {
+	for i := 0; i <= 0x0F; i++ {
+		s := display.Sprites[byte(i)]
+		for _, b := range s {
 			if err := mem.SetByte(addr, b); err != nil {
 				return err
 			}
