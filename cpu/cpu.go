@@ -695,4 +695,3 @@ func (cpu *CPU) instr_Fx65(x byte) {
 
 	cpu.R.PC += 2
 }
-	log.Printf("return from subroutine, PC is now %04x\n", cpu.R.PC)
