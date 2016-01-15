@@ -547,9 +547,14 @@ func (cpu *CPU) instr_Dxyn(x, y, n byte) {
 func (cpu *CPU) instr_Ex9E(x byte) {
 	log.Printf("skip net instruction if key %x is pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
-	if cpu.Keyboard.KeyState[b] {
+	c := make(chan bool)
+	go keyboard.WaitForKey(b, 2*time.Second, c)
+
+	if <-c {
+		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
+		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	}
 }
@@ -562,9 +567,14 @@ func (cpu *CPU) instr_Ex9E(x byte) {
 func (cpu *CPU) instr_ExA1(x byte) {
 	log.Printf("skip net instruction if key %x is not pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
-	if cpu.Keyboard.KeyState[b] {
+	c := make(chan bool)
+	go keyboard.WaitForKey(b, 2*time.Second, c)
+
+	if <-c {
+		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	} else {
+		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	}
 }

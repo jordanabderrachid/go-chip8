@@ -1,6 +1,10 @@
 package keyboard
 
-import "github.com/nsf/termbox-go"
+import (
+	"github.com/nsf/termbox-go"
+	"log"
+	"time"
+)
 
 // This map binds the value returned by the keyboard to the corresponding chip-8 value.
 var KeyMap map[int]byte = map[int]byte{
@@ -45,8 +49,6 @@ func (kb *Keyboard) Reset() {
 		0x0E: false,
 		0x0F: false,
 	}
-
-	go kb.ListenKeyboardInput()
 }
 
 func (kb *Keyboard) KeyStateToFalse() {
@@ -68,6 +70,7 @@ func (kb *Keyboard) ActivateKey(key byte) {
 func (kb *Keyboard) ListenKeyboardInput() {
 	for {
 		key := int(termbox.PollEvent().Ch)
+		log.Printf("ListenKeyboardInput keypressed: %d\n", key)
 		if v, ok := KeyMap[key]; ok {
 			kb.ActivateKey(v)
 		} else {
@@ -81,6 +84,36 @@ func WaitForNextKey() byte {
 		key := int(termbox.PollEvent().Ch)
 		if v, ok := KeyMap[key]; ok {
 			return v
+		}
+	}
+}
+
+func WaitForKey(b byte, delay time.Duration, c chan bool) {
+	go func() {
+		select {
+		case <-time.After(delay):
+			log.Println("stop waiting key.")
+			termbox.Interrupt()
+		}
+	}()
+
+	for {
+		ev := termbox.PollEvent()
+		switch ev.Type {
+		case termbox.EventInterrupt:
+			c <- false
+			break
+		case termbox.EventKey:
+			ch := int(ev.Ch)
+			log.Printf("key %d\n", ch)
+			if v, ok := KeyMap[ch]; ok {
+				if v == b {
+					log.Println("good key pressed")
+					c <- true
+					break
+				}
+			}
+		default:
 		}
 	}
 }
