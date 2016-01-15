@@ -63,9 +63,6 @@ func (cpu *CPU) Reset() {
 	if err := cpu.Memory.LoadSprites(); err != nil {
 		log.Panic(err)
 	}
-
-	go cpu.SoundTimer.Run(&cpu.R.ST)
-	go cpu.DelayTimer.Run(&cpu.R.DT)
 }
 
 func (cpu *CPU) LoadData(b []byte) {
@@ -100,6 +97,14 @@ func (cpu *CPU) Run() {
 		select {
 		case <-ticker.C:
 			cpu.ExecuteOpcode(cpu.GetOpcode(cpu.R.PC))
+
+			if cpu.R.DT > 0x00 {
+				cpu.R.DT--
+			}
+
+			if cpu.R.ST > 0x00 {
+				cpu.R.ST--
+			}
 		}
 	}
 }
