@@ -252,7 +252,10 @@ func (cpu *CPU) instr_00E0() {
 // The interpreter sets the program counter to the address at the top of the stack, then substracts 1 from the stack pointer.
 func (cpu *CPU) instr_00EE() {
 	cpu.R.PC = cpu.R.Stack[cpu.R.SP]
-	cpu.R.SP--
+	log.Printf("return from subroutine, PC is now %04x\n", cpu.R.PC)
+	if cpu.R.SP > 0x00 {
+		cpu.R.SP--
+	}
 }
 
 // 0x1nnn - JP addr
