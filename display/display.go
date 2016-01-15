@@ -120,7 +120,7 @@ func (d *Display) setPixel(x, y int, b byte) (bool, error) {
 		coll = true
 	}
 
-	d.Cells[y][x] = b
+	d.Cells[y][x] = d.Cells[y][x] ^ b
 	return coll, nil
 }
 
