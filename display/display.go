@@ -2,8 +2,6 @@ package display
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
-	"unicode/utf8"
 )
 
 const (
@@ -11,8 +9,8 @@ const (
 	Y int = 32
 )
 
-var activeColor termbox.Attribute = termbox.ColorWhite
-var inactiveColor termbox.Attribute = termbox.ColorBlack
+var activeColor int
+var inactiveColor int
 
 var Sprites map[byte][5]byte = map[byte][5]byte{
 	0x00: {0xF0, 0x90, 0x90, 0x90, 0xF0}, // "0"
@@ -61,7 +59,6 @@ type Display struct {
 }
 
 func (d *Display) Reset() {
-	termbox.HideCursor()
 	d.Cells = make([][]byte, Y)
 	for i := range d.Cells {
 		d.Cells[i] = make([]byte, X)
@@ -127,17 +124,14 @@ func (d *Display) setPixel(x, y int, b byte) (bool, error) {
 func (d *Display) draw() {
 	for y := range d.Cells {
 		for x := range d.Cells[y] {
-			var color termbox.Attribute
+			var color int
 			if d.Cells[y][x] == 1 {
 				color = activeColor
 			} else {
 				color = inactiveColor
 			}
-			r, _ := utf8.DecodeRuneInString(" ")
-			termbox.SetCell(x, y, r, color, color)
+			// TODO: draw here
+			// termbox.SetCell(x, y, r, color, color)
 		}
-	}
-	if err := termbox.Flush(); err != nil {
-		panic(err)
 	}
 }

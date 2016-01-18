@@ -1,7 +1,6 @@
 package keyboard
 
 import (
-	"github.com/nsf/termbox-go"
 	"log"
 	"time"
 )
@@ -63,57 +62,6 @@ func (kb *Keyboard) ActivateKey(key byte) {
 			kb.KeyState[k] = true
 		} else {
 			kb.KeyState[k] = false
-		}
-	}
-}
-
-func (kb *Keyboard) ListenKeyboardInput() {
-	for {
-		key := int(termbox.PollEvent().Ch)
-		log.Printf("ListenKeyboardInput keypressed: %d\n", key)
-		if v, ok := KeyMap[key]; ok {
-			kb.ActivateKey(v)
-		} else {
-			kb.KeyStateToFalse()
-		}
-	}
-}
-
-func WaitForNextKey() byte {
-	for {
-		key := int(termbox.PollEvent().Ch)
-		if v, ok := KeyMap[key]; ok {
-			return v
-		}
-	}
-}
-
-func WaitForKey(b byte, delay time.Duration, c chan bool) {
-	go func() {
-		select {
-		case <-time.After(delay):
-			log.Println("stop waiting key.")
-			termbox.Interrupt()
-		}
-	}()
-
-	for {
-		ev := termbox.PollEvent()
-		switch ev.Type {
-		case termbox.EventInterrupt:
-			c <- false
-			break
-		case termbox.EventKey:
-			ch := int(ev.Ch)
-			log.Printf("key %d\n", ch)
-			if v, ok := KeyMap[ch]; ok {
-				if v == b {
-					log.Println("good key pressed")
-					c <- true
-					break
-				}
-			}
-		default:
 		}
 	}
 }

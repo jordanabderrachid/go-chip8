@@ -550,10 +550,8 @@ func (cpu *CPU) instr_Dxyn(x, y, n byte) {
 func (cpu *CPU) instr_Ex9E(x byte) {
 	log.Printf("skip net instruction if key %x is pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
-	c := make(chan bool)
-	go keyboard.WaitForKey(b, 2*time.Second, c)
-
-	if <-c {
+	// TODO: check keyboard state
+	if true {
 		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
@@ -570,10 +568,8 @@ func (cpu *CPU) instr_Ex9E(x byte) {
 func (cpu *CPU) instr_ExA1(x byte) {
 	log.Printf("skip net instruction if key %x is not pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
-	c := make(chan bool)
-	go keyboard.WaitForKey(b, 2*time.Second, c)
-
-	if <-c {
+	// TODO: check keyboard state
+	if true {
 		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	} else {
@@ -598,8 +594,7 @@ func (cpu *CPU) instr_Fx07(x byte) {
 // All execution stops until a key is pressed, then the value of that key is stored in Vx.
 func (cpu *CPU) instr_Fx0A(x byte) {
 	log.Println("freeze until key press")
-	b := keyboard.WaitForNextKey()
-	cpu.R.V[x] = b
+	cpu.R.V[x] = 0x01
 	cpu.R.PC += 2
 }
 

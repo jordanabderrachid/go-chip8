@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"github.com/jordanabderrachid/go-chip8/cpu"
-	"github.com/nsf/termbox-go"
 	"log"
 	"os"
 )
@@ -17,14 +16,6 @@ func main() {
 
 	romFile := flag.String("r", "", "rom file")
 	flag.Parse()
-
-	log.Println("initializing termbox")
-	if err := termbox.Init(); err != nil {
-		log.Panicln(err)
-	}
-	defer termbox.Close()
-
-	termbox.SetInputMode(termbox.InputEsc)
 
 	CPU := new(cpu.CPU)
 	CPU.Reset()
