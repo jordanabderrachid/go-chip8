@@ -551,7 +551,7 @@ func (cpu *CPU) instr_Ex9E(x byte) {
 	log.Printf("skip net instruction if key %x is pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
 	// TODO: check keyboard state
-	if true {
+	if keyboard.IsKeyPressed(b) {
 		log.Println("instruction skipped")
 		cpu.R.PC += 4
 	} else {
@@ -569,7 +569,7 @@ func (cpu *CPU) instr_ExA1(x byte) {
 	log.Printf("skip net instruction if key %x is not pressed\n", cpu.R.V[x])
 	b := cpu.R.V[x]
 	// TODO: check keyboard state
-	if true {
+	if keyboard.IsKeyPressed(b) {
 		log.Println("instruction not skipped")
 		cpu.R.PC += 2
 	} else {

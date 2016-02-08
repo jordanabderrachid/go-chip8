@@ -2,15 +2,16 @@ package display
 
 import (
 	"fmt"
+	"github.com/veandco/go-sdl2/sdl"
+	"log"
 )
 
 const (
-	X int = 64
-	Y int = 32
+	X             int    = 64
+	Y             int    = 32
+	activeColor   uint32 = 0xFFFFFFF
+	inactiveColor uint32 = 0x000000
 )
-
-var activeColor int
-var inactiveColor int
 
 var Sprites map[byte][5]byte = map[byte][5]byte{
 	0x00: {0xF0, 0x90, 0x90, 0x90, 0xF0}, // "0"
@@ -55,10 +56,28 @@ type Sprite struct {
 }
 
 type Display struct {
-	Cells [][]byte
+	Cells   [][]byte
+	Window  *sdl.Window
+	Surface *sdl.Surface
 }
 
 func (d *Display) Reset() {
+	var err error
+
+	if err = sdl.Init(sdl.INIT_EVERYTHING); err != nil {
+		log.Panicln(err)
+	}
+
+	d.Window, err = sdl.CreateWindow("go chip8", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, X*10, Y*10, sdl.WINDOW_SHOWN)
+	if err != nil {
+		log.Panicln(err)
+	}
+
+	d.Surface, err = d.Window.GetSurface()
+	if err != nil {
+		log.Panicln(err)
+	}
+
 	d.Cells = make([][]byte, Y)
 	for i := range d.Cells {
 		d.Cells[i] = make([]byte, X)
@@ -124,14 +143,16 @@ func (d *Display) setPixel(x, y int, b byte) (bool, error) {
 func (d *Display) draw() {
 	for y := range d.Cells {
 		for x := range d.Cells[y] {
-			var color int
+			var color uint32
 			if d.Cells[y][x] == 1 {
 				color = activeColor
 			} else {
 				color = inactiveColor
 			}
-			// TODO: draw here
-			// termbox.SetCell(x, y, r, color, color)
+			rect := &sdl.Rect{int32(x) * 10, int32(y) * 10, 10, 10}
+			d.Surface.FillRect(rect, color)
 		}
 	}
+
+	d.Window.UpdateSurface()
 }

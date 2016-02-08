@@ -1,28 +1,25 @@
 package keyboard
 
-import (
-	"log"
-	"time"
-)
+import "github.com/veandco/go-sdl2/sdl"
 
 // This map binds the value returned by the keyboard to the corresponding chip-8 value.
-var KeyMap map[int]byte = map[int]byte{
-	48:  0x00, // "0"
-	49:  0x01, // "1"
-	50:  0x02, // "2"
-	51:  0x03, // "3"
-	52:  0x04, // "4"
-	53:  0x05, // "5"
-	54:  0x06, // "6"
-	55:  0x07, // "7"
-	56:  0x08, // "8"
-	57:  0x09, // "9"
-	97:  0x0A, // "a"
-	98:  0x0B, // "b"
-	99:  0x0C, // "c"
-	100: 0x0D, // "d"
-	101: 0x0E, // "e"
-	102: 0x0F, // "f"
+var KeyMap map[byte]sdl.Scancode = map[byte]sdl.Scancode{
+	0x00: sdl.SCANCODE_0, // "0"
+	0x01: sdl.SCANCODE_1, // "1"
+	0x02: sdl.SCANCODE_2, // "2"
+	0x03: sdl.SCANCODE_3, // "3"
+	0x04: sdl.SCANCODE_4, // "4"
+	0x05: sdl.SCANCODE_5, // "5"
+	0x06: sdl.SCANCODE_6, // "6"
+	0x07: sdl.SCANCODE_7, // "7"
+	0x08: sdl.SCANCODE_8, // "8"
+	0x09: sdl.SCANCODE_9, // "9"
+	0x0A: sdl.SCANCODE_A, // "a"
+	0x0B: sdl.SCANCODE_B, // "b"
+	0x0C: sdl.SCANCODE_C, // "c"
+	0x0D: sdl.SCANCODE_D, // "d"
+	0x0E: sdl.SCANCODE_E, // "e"
+	0x0F: sdl.SCANCODE_F, // "f"
 }
 
 type Keyboard struct {
@@ -56,12 +53,13 @@ func (kb *Keyboard) KeyStateToFalse() {
 	}
 }
 
-func (kb *Keyboard) ActivateKey(key byte) {
-	for k := range kb.KeyState {
-		if k == key {
-			kb.KeyState[k] = true
-		} else {
-			kb.KeyState[k] = false
-		}
+func IsKeyPressed(b byte) bool {
+	keyboardState := sdl.GetKeyboardState()
+	code := KeyMap[b]
+	pressed := keyboardState[code]
+	if pressed == 1 {
+		return true
+	} else {
+		return false
 	}
 }

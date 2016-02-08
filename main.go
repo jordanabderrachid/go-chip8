@@ -5,9 +5,11 @@ import (
 	"github.com/jordanabderrachid/go-chip8/cpu"
 	"log"
 	"os"
+	"runtime"
 )
 
 func main() {
+	runtime.LockOSThread()
 	logfile, err := os.Create("log")
 	if err != nil {
 		panic(err)
